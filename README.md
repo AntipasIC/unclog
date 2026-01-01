@@ -1,90 +1,104 @@
-# unclog
-vibe coded to handle my printing business process, it unclogs all the tasks that used to get stuck in a poor pipeline
 
-I've created a **Daily Production Scheduler** app with all your requirements! Here's what it includes:
+# 📅 Production Scheduler
 
-## Features Implemented:
-1. ✅ **Daily capacity limits** per product (e.g., 2 apples, 3 oranges)
-2. ✅ **Smart order scheduling** - automatically assigns orders across days based on capacity
-3. ✅ **Adjustable limits** - easily modify daily capacity as needed
-4. ✅ **Dashboard** with pipeline, weekly schedule, and metrics
-5. ✅ **Notifications** - visual alerts when capacity is reached
-6. ✅ **Material tracking** - define raw materials per unit, auto-calculate consumption when orders complete
-7. ✅ **Kanban-style workflow** - inspired by Japanese lean manufacturing
+A lightweight **React + Vite** web app for managing production capacity, orders, and materials.  
+Inspired by **Kanban-style lean manufacturing**, this app helps track daily limits, auto-schedule orders, and monitor material usage — optimized for mobile/Android use and deployable via GitHub Pages.
 
-## 📦 DEPLOYMENT INSTRUCTIONS
+---
 
-### Option A: Quick Test (No Installation)
-1. The app is running above - test it right now!
-2. Click "Settings" → Add products with daily limits
-3. Add materials if tracking inventory
-4. Go to "Orders" → Create orders
-5. View "Dashboard" and "Schedule" to see auto-scheduling
+## ✨ Features Implemented
 
-### Option B: Install as Mobile/Desktop App
+- ✅ **Daily capacity limits per product** (e.g., 2 apples, 3 oranges)  
+- ✅ **Smart order scheduling** – automatically assigns orders across days based on capacity  
+- ✅ **Adjustable limits** – easily modify daily capacity as needed  
+- ✅ **Dashboard** – pipeline, weekly schedule, and production metrics  
+- ✅ **Notifications** – visual alerts when capacity is reached  
+- ✅ **Material tracking** – define raw materials per unit, auto-calculate consumption when orders complete  
+- ✅ **Kanban-style workflow** – inspired by Japanese lean manufacturing principles  
 
-**For Android (PWA - Progressive Web App):**
+---
 
-1. **Save the HTML file:**
-   - Copy the code from the artifact above
-   - Save as `production-scheduler.html` on your computer
+## 🚀 Getting Started
 
-2. **Host it online (Choose one method):**
-   
-   **Method 1 - GitHub Pages (Free & Easy):**
-   - Create a free GitHub account
-   - Create a new repository
-   - Upload `production-scheduler.html`
-   - Rename it to `index.html`
-   - Go to Settings → Pages → Enable GitHub Pages
-   - You'll get a URL like: `https://yourusername.github.io/repo-name`
+### 1. Clone the repository
+```bash
+git clone https://github.com/<your-username>/<your-repo>.git
+cd <your-repo>
+```
 
-   **Method 2 - Netlify Drop (Instant):**
-   - Go to https://app.netlify.com/drop
-   - Drag and drop your HTML file
-   - Get instant URL
+### 2. Install dependencies
+```bash
+npm install
+```
 
-3. **Install on Android:**
-   - Open the URL in Chrome browser
-   - Tap the **⋮** menu → "Install app" or "Add to Home Screen"
-   - The app will install like a native app
-   - Open from your app drawer anytime!
+### 3. Run locally
+```bash
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-**For Desktop/Laptop:**
-- Open the HTML file directly in Chrome
-- Use normally - data saves automatically
+---
 
-## 📱 USER GUIDE
+## 🌐 Deployment (GitHub Pages)
 
-### First Time Setup:
-1. **Go to Settings tab**
-2. **Add your products:**
-   - Example: "Apples" with daily limit "10"
-   - Example: "Oranges" with daily limit "5"
-3. **(Optional) Add materials:**
-   - Click "+ Materials" under each product
-   - Example: "Wood" uses "2.5" units per apple
-4. **Set initial inventory** (if tracking materials)
+This project uses **Vite** and **gh-pages** for deployment.
 
-### Daily Workflow:
-1. **Orders tab** - Add new orders as they come in
-2. **Dashboard** - See today's workload and capacity status
-3. **Complete orders** - Tap "Complete" when done
-   - Automatically deducts materials
-   - Shows consumption breakdown
-4. **Schedule tab** - View next 7 days of planned production
+1. Build the project:
+   ```bash
+   npm run build
+   ```
 
-### Key Benefits:
-- 📊 **Visual capacity indicators** - know at a glance if overloaded
-- 📅 **Auto-scheduling** - orders spread across days intelligently
-- 📦 **Material forecasting** - like printer ink estimation
-- 💾 **Auto-save** - all data persists, no manual saving needed
-- 🚫 **No internet needed** after installation
+2. Deploy to GitHub Pages:
+   ```bash
+   npm run deploy
+   ```
 
-### Tips:
-- Start each day checking the Dashboard
-- Adjust capacity limits as your efficiency improves
-- Material tracking helps predict when to reorder supplies
-- Archive completed orders by deleting them
+3. Access your app at:
+   ```
+   https://<your-username>.github.io/<your-repo>/
+   ```
 
-**The app embodies Kaizen principles:** continuous improvement through simple, visual workflow management!
+---
+
+## 📱 Android-Friendly Design
+
+- **Responsive UI**: Tailwind CSS ensures layouts adapt to mobile screens.  
+- **Persistent storage**: Uses `localStorage` for saving capacities, orders, and materials across sessions.  
+- **Touch-first workflow**: Large buttons and clear tap targets for easy use on Android devices.  
+
+---
+
+## 🛠️ Tech Stack
+
+- [React](https://react.dev/) – UI framework  
+- [Vite](https://vitejs.dev/) – fast bundler & dev server  
+- [Tailwind CSS v4](https://tailwindcss.com/) – utility-first styling  
+- [Lucide React](https://lucide.dev/) – lightweight icons  
+- [gh-pages](https://www.npmjs.com/package/gh-pages) – GitHub Pages deployment  
+
+---
+
+## 📖 Usage Notes
+
+- **Data persistence**: Orders, capacities, and materials are stored in browser `localStorage`.  
+- **Scheduling logic**: Orders are automatically distributed across days based on product capacity.  
+- **Material consumption**: Completing an order deducts raw materials from inventory.  
+- **Alerts**: Dashboard highlights when daily capacity is reached.  
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome!  
+If you’d like to extend functionality (e.g., add authentication, export schedules, or integrate with APIs), fork the repo and submit a PR.
+
+---
+
+## 📜 License
+
+This project is open-source under the [MIT License](LICENSE).
+```
+
+---
+
+Would you like me to also add a **demo screenshot section** in the README (with placeholders for images you can upload later)? That makes GitHub Pages repos look more professional.

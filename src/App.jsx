@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
-import { Calendar, Package, AlertCircle, Settings, Plus, CheckCircle, Trash2, Archive } from 'lucide-react';
+import { Calendar, Package, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
+import { storage } from './storage';
 
 const ProductionScheduler = () => {
   const [view, setView] = useState('dashboard');
@@ -12,37 +14,32 @@ const ProductionScheduler = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const cap = await window.storage.get('capacities');
-        const ord = await window.storage.get('orders');
-        const mat = await window.storage.get('materials');
-        const sch = await window.storage.get('schedule');
-        
+        const cap = await storage.get('capacities');
+        const ord = await storage.get('orders');
+        const mat = await storage.get('materials');
+        const sch = await storage.get('schedule');
+
         if (cap) setCapacities(JSON.parse(cap.value));
         if (ord) setOrders(JSON.parse(ord.value));
         if (mat) setMaterials(JSON.parse(mat.value));
         if (sch) setSchedule(JSON.parse(sch.value));
-      } catch (error) {
+      } catch {
         console.log('No saved data found, starting fresh');
       }
     };
     loadData();
   }, []);
 
-  // Save data to storage
-  const saveData = async () => {
-    try {
-      await window.storage.set('capacities', JSON.stringify(capacities));
-      await window.storage.set('orders', JSON.stringify(orders));
-      await window.storage.set('materials', JSON.stringify(materials));
-      await window.storage.set('schedule', JSON.stringify(schedule));
-    } catch (error) {
-      console.error('Failed to save data:', error);
-    }
-  };
-
+  // Save data to storage (persist across sessions, Android-friendly)
   useEffect(() => {
-    if (capacities.length > 0 || orders.length > 0) {
-      saveData();
+    const save = async () => {
+      await storage.set('capacities', JSON.stringify(capacities));
+      await storage.set('orders', JSON.stringify(orders));
+      await storage.set('materials', JSON.stringify(materials));
+      await storage.set('schedule', JSON.stringify(schedule));
+    };
+    if (capacities.length > 0 || orders.length > 0 || materials.length > 0) {
+      save();
     }
   }, [capacities, orders, materials, schedule]);
 
@@ -50,17 +47,17 @@ const ProductionScheduler = () => {
   const scheduleOrders = () => {
     const newSchedule = {};
     const pendingOrders = orders.filter(o => o.status === 'pending');
-    
+
     pendingOrders.forEach(order => {
       const product = capacities.find(c => c.name === order.product);
       if (!product) return;
 
       let remaining = order.quantity;
       let currentDate = new Date();
-      
+
       while (remaining > 0) {
         const dateKey = currentDate.toISOString().split('T')[0];
-        
+
         if (!newSchedule[dateKey]) {
           newSchedule[dateKey] = capacities.map(c => ({
             product: c.name,
@@ -95,7 +92,6 @@ const ProductionScheduler = () => {
   const calculateMaterialUsage = (productName, quantity) => {
     const product = capacities.find(c => c.name === productName);
     if (!product || !product.materials) return [];
-
     return product.materials.map(m => ({
       material: m.material,
       consumed: m.unitsPerProduct * quantity
@@ -107,7 +103,7 @@ const ProductionScheduler = () => {
     if (!order) return;
 
     const usage = calculateMaterialUsage(order.product, order.quantity);
-    
+
     const updatedMaterials = materials.map(mat => {
       const consumed = usage.find(u => u.material === mat.name);
       if (consumed) {
@@ -117,9 +113,7 @@ const ProductionScheduler = () => {
     });
 
     setMaterials(updatedMaterials);
-    setOrders(orders.map(o => 
-      o.id === orderId ? { ...o, status: 'completed' } : o
-    ));
+    setOrders(orders.map(o => (o.id === orderId ? { ...o, status: 'completed' } : o)));
 
     alert(`Order #${orderId} completed!\n\nMaterial consumption:\n${usage.map(u => `${u.material}: ${u.consumed} units`).join('\n')}`);
   };
@@ -129,14 +123,17 @@ const ProductionScheduler = () => {
     const todaySchedule = schedule[today] || [];
     const pendingOrders = orders.filter(o => o.status === 'pending');
     const completedOrders = orders.filter(o => o.status === 'completed');
-
     const capacityReached = todaySchedule.some(s => s.allocated >= s.capacity);
 
     return (
       <div className="space-y-4">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
           <h2 className="text-2xl font-bold mb-2">Production Dashboard</h2>
-          <p className="text-blue-100">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p className="text-blue-100">
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            })}
+          </p>
         </div>
 
         {capacityReached && (
@@ -175,7 +172,7 @@ const ProductionScheduler = () => {
                   <span className="font-medium">{item.product}</span>
                   <div className="flex items-center gap-2">
                     <div className="w-32 bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full ${item.allocated >= item.capacity ? 'bg-red-500' : 'bg-blue-500'}`}
                         style={{ width: `${(item.allocated / item.capacity) * 100}%` }}
                       />
@@ -203,7 +200,7 @@ const ProductionScheduler = () => {
                     <p className="font-medium">{order.product}</p>
                     <p className="text-sm text-gray-500">Qty: {order.quantity}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => completeOrder(order.id)}
                     className="bg-green-500 text-white px-3 py-1 rounded text-sm flex items-center gap-1 hover:bg-green-600"
                   >
@@ -243,10 +240,10 @@ const ProductionScheduler = () => {
 
     const addCapacity = () => {
       if (newProduct.name && newProduct.dailyLimit) {
-        setCapacities([...capacities, { 
-          ...newProduct, 
+        setCapacities([...capacities, {
+          ...newProduct,
           dailyLimit: parseInt(newProduct.dailyLimit),
-          materials: newProduct.materials 
+          materials: newProduct.materials
         }]);
         setNewProduct({ name: '', dailyLimit: '', materials: [] });
       }
@@ -268,7 +265,7 @@ const ProductionScheduler = () => {
     return (
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Capacity Settings</h2>
-        
+
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="font-bold mb-3">Add New Product</h3>
           <div className="space-y-3">
@@ -286,7 +283,7 @@ const ProductionScheduler = () => {
               onChange={(e) => setNewProduct({ ...newProduct, dailyLimit: e.target.value })}
               className="w-full p-2 border rounded"
             />
-            
+
             <div className="border-t pt-3 mt-3">
               <p className="text-sm font-semibold mb-2">Materials per unit (optional)</p>
               <div className="flex gap-2">
@@ -342,7 +339,7 @@ const ProductionScheduler = () => {
                         </p>
                       )}
                     </div>
-                    <button 
+                    <button
                       onClick={() => setCapacities(capacities.filter((_, idx) => idx !== i))}
                       className="text-red-500 hover:text-red-700"
                     >
@@ -373,7 +370,7 @@ const ProductionScheduler = () => {
                 id="matQty"
                 className="w-32 p-2 border rounded"
               />
-              <button 
+              <button
                 onClick={() => {
                   const name = document.getElementById('matName').value;
                   const qty = document.getElementById('matQty').value;
@@ -393,7 +390,7 @@ const ProductionScheduler = () => {
                 {materials.map((mat, i) => (
                   <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
                     <span>{mat.name}: {mat.remaining} units</span>
-                    <button 
+                    <button
                       onClick={() => setMaterials(materials.filter((_, idx) => idx !== i))}
                       className="text-red-500"
                     >
@@ -429,7 +426,7 @@ const ProductionScheduler = () => {
     return (
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Orders</h2>
-        
+
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="font-bold mb-3">New Order</h3>
           <div className="space-y-3">
@@ -470,7 +467,7 @@ const ProductionScheduler = () => {
                     </div>
                     <div className="flex gap-2">
                       {order.status === 'pending' ? (
-                        <button 
+                        <button
                           onClick={() => completeOrder(order.id)}
                           className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
                         >
@@ -479,7 +476,7 @@ const ProductionScheduler = () => {
                       ) : (
                         <span className="text-green-600 font-semibold text-sm">✓ Completed</span>
                       )}
-                      <button 
+                      <button
                         onClick={() => setOrders(orders.filter(o => o.id !== order.id))}
                         className="text-red-500 hover:text-red-700"
                       >
@@ -504,18 +501,20 @@ const ProductionScheduler = () => {
     return (
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">7-Day Schedule</h2>
-        
+
         {dates.length > 0 ? (
           dates.map(date => (
             <div key={date} className="bg-white p-4 rounded-lg shadow">
-              <h3 className="font-bold mb-3">{new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
+              <h3 className="font-bold mb-3">
+                {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+              </h3>
               <div className="space-y-2">
                 {schedule[date].map((item, i) => (
                   <div key={i} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                     <span className="font-medium">{item.product}</span>
                     <div className="flex items-center gap-2">
                       <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                           className={`h-2 rounded-full ${item.allocated >= item.capacity ? 'bg-red-500' : 'bg-blue-500'}`}
                           style={{ width: `${(item.allocated / item.capacity) * 100}%` }}
                         />
@@ -542,28 +541,20 @@ const ProductionScheduler = () => {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-4">Production Scheduler</h1>
           <div className="flex gap-2">
-            <button 
-              onClick={() => setView('dashboard')}
-              className={`px-4 py-2 rounded ${view === 'dashboard' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
-            >
+            <button onClick={() => setView('dashboard')}
+              className={`px-4 py-2 rounded ${view === 'dashboard' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}>
               Dashboard
             </button>
-            <button 
-              onClick={() => setView('orders')}
-              className={`px-4 py-2 rounded ${view === 'orders' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
-            >
+            <button onClick={() => setView('orders')}
+              className={`px-4 py-2 rounded ${view === 'orders' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}>
               Orders
             </button>
-            <button 
-              onClick={() => setView('schedule')}
-              className={`px-4 py-2 rounded ${view === 'schedule' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
-            >
+            <button onClick={() => setView('schedule')}
+              className={`px-4 py-2 rounded ${view === 'schedule' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}>
               Schedule
             </button>
-            <button 
-              onClick={() => setView('settings')}
-              className={`px-4 py-2 rounded ${view === 'settings' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
-            >
+            <button onClick={() => setView('settings')}
+              className={`px-4 py-2 rounded ${view === 'settings' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}>
               Settings
             </button>
           </div>
